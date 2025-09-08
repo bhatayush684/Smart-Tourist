@@ -238,6 +238,60 @@ const touristSchema = new mongoose.Schema({
       default: false
     }
   },
+  digitalIdCards: [{
+    serial: {
+      type: String,
+      required: true,
+      unique: true,
+      index: true
+    },
+    version: {
+      type: Number,
+      default: 1
+    },
+    photoUrl: {
+      type: String,
+      default: null
+    },
+    documentType: {
+      type: String,
+      enum: ['passport', 'aadhaar', 'other'],
+      default: 'passport'
+    },
+    documentNumber: {
+      type: String,
+      required: true
+    },
+    name: {
+      type: String,
+      required: true
+    },
+    nationality: {
+      type: String,
+      required: true
+    },
+    qrDataUrl: {
+      type: String,
+      required: true
+    },
+    issuedAt: {
+      type: Date,
+      required: true
+    },
+    expiresAt: {
+      type: Date,
+      required: true
+    },
+    status: {
+      type: String,
+      enum: ['active', 'expired', 'revoked'],
+      default: 'active'
+    },
+    immutable: {
+      type: Boolean,
+      default: true
+    }
+  }],
   preferences: {
     language: {
       type: String,

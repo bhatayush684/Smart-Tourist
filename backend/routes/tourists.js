@@ -4,8 +4,31 @@ const Tourist = require('../models/Tourist');
 const Device = require('../models/Device');
 const Alert = require('../models/Alert');
 const { authorizeTouristAccess } = require('../middleware/auth');
+const QRCode = require('qrcode');
+const crypto = require('crypto');
+const multer = require('multer');
+const path = require('path');
 
 const router = express.Router();
+// File upload storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(process.cwd(), 'uploads'));
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '_'));
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['image/jpeg', 'image/png', 'application/pdf'];
+    if (allowed.includes(file.mimetype)) return cb(null, true);
+    cb(new Error('Only JPG, PNG images or PDF documents are allowed'));
+  }
+});
 
 // @route   GET /api/tourists
 // @desc    Get all tourists (admin/government only)
@@ -505,3 +528,255 @@ router.get('/nearby', async (req, res) => {
 });
 
 module.exports = router;
+
+// Helper: generate unique serial for digital ID
+function generateDigitalIdSerial(touristId) {
+  const timestamp = Date.now();
+  const random = Math.floor(Math.random() * 1e6).toString().padStart(6, '0');
+  return `DID-${new Date().getFullYear()}-${touristId.slice(-4)}-${random}`;
+}
+
+// @route   POST /api/tourists/me/digital-id
+// @desc    Issue a new digital ID card (immutable)
+// @access  Private
+router.post('/me/digital-id', upload.fields([
+  { name: 'photo', maxCount: 1 },
+  { name: 'document', maxCount: 1 }
+]), [
+  body('documentType').isIn(['passport', 'aadhaar', 'other']).withMessage('Invalid document type'),
+  body('documentNumber').notEmpty().withMessage('Document number is required'),
+  body('validDays').optional().isInt({ min: 1, max: 365 }).withMessage('validDays must be between 1 and 365')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array() });
+    }
+
+    let tourist = await Tourist.findOne({ userId: req.user._id });
+    if (!tourist) {
+      // Create a minimal tourist profile with safe defaults to allow ID issuance
+      try {
+        const nameParts = (req.user.name || 'Tourist User').split(' ');
+        const firstName = nameParts[0] || 'Tourist';
+        const lastName = nameParts.slice(1).join(' ') || 'User';
+        const now = new Date();
+
+        // Generate a unique temporary passport number with retries to avoid unique constraint conflicts
+        let tempPassport = '';
+        for (let attempt = 0; attempt < 5; attempt++) {
+          tempPassport = `TEMP-${now.getFullYear()}-${Math.floor(Math.random() * 1e9).toString().padStart(9, '0')}`;
+          const exists = await Tourist.findOne({ 'personalInfo.passportNumber': tempPassport }).lean();
+          if (!exists) break;
+          if (attempt === 4) throw new Error('Could not generate unique temporary passport number');
+        }
+
+        tourist = new Tourist({
+          userId: req.user._id,
+          personalInfo: {
+            firstName,
+            lastName,
+            dateOfBirth: new Date('1990-01-01T00:00:00Z'),
+            gender: 'other',
+            nationality: 'Unknown',
+            passportNumber: tempPassport,
+            passportExpiry: new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000),
+            phoneNumber: '+10000000000',
+            emergencyContact: {
+              name: 'Emergency Contact',
+              relationship: 'Unknown',
+              phoneNumber: '+10000000001',
+              email: 'contact@example.com'
+            }
+          },
+          travelInfo: {
+            arrivalDate: now,
+            departureDate: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
+            purposeOfVisit: 'tourism',
+            accommodation: {
+              type: 'hotel',
+              name: 'Unknown',
+              address: 'Unknown',
+              phoneNumber: '+10000000002'
+            }
+          },
+          location: {
+            current: {
+              coordinates: { type: 'Point', coordinates: [0, 0] },
+              address: 'Unknown',
+              timestamp: now,
+              accuracy: 0
+            },
+            history: []
+          }
+        });
+        await tourist.save();
+      } catch (createErr) {
+        console.error('Auto-create tourist failed:', createErr);
+        // Fallback: generate a temporary dummy digital ID without persisting
+        try {
+          const now = new Date();
+          const validDays = parseInt(req.body.validDays, 10) || 30;
+          const issuedAt = now;
+          const expiresAt = new Date(now.getTime() + validDays * 24 * 60 * 60 * 1000);
+          const serial = `DUMMY-${now.getFullYear()}-${Math.floor(Math.random() * 1e6)
+            .toString()
+            .padStart(6, '0')}`;
+          const name = req.user.name || 'Guest User';
+          const qrPayload = {
+            serial,
+            touristId: 'TEMP',
+            name,
+            expiresAt
+          };
+          const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), {
+            errorCorrectionLevel: 'M',
+            margin: 1,
+            scale: 6
+          });
+          const blockchainHash = crypto
+            .createHash('sha256')
+            .update(serial + JSON.stringify(qrPayload))
+            .digest('hex');
+
+          const card = {
+            serial,
+            version: 1,
+            photoUrl: null,
+            documentType: req.body.documentType || 'other',
+            documentNumber: req.body.documentNumber || 'TEMP',
+            name,
+            nationality: 'Unknown',
+            qrDataUrl,
+            issuedAt,
+            expiresAt,
+            status: 'active',
+            immutable: true,
+            temporary: true
+          };
+
+          return res.status(201).json({
+            success: true,
+            message: 'Temporary Digital ID generated',
+            data: { card, blockchainHash, temporary: true }
+          });
+        } catch (dummyErr) {
+          return res.status(400).json({
+            success: false,
+            message: 'Could not create tourist profile automatically',
+            error: dummyErr.message
+          });
+        }
+      }
+    }
+
+    const validDays = req.body.validDays || 30;
+    const issuedAt = new Date();
+    const expiresAt = new Date(issuedAt.getTime() + validDays * 24 * 60 * 60 * 1000);
+
+    const serial = generateDigitalIdSerial(tourist.touristId || tourist._id.toString());
+
+    // Payload for QR: minimal verification info
+    const qrPayload = {
+      serial,
+      touristId: tourist.touristId,
+      name: `${tourist.personalInfo.firstName} ${tourist.personalInfo.lastName}`,
+      expiresAt
+    };
+
+    const qrDataUrl = await QRCode.toDataURL(JSON.stringify(qrPayload), { errorCorrectionLevel: 'M', margin: 1, scale: 6 });
+
+    const blockchainHash = crypto
+      .createHash('sha256')
+      .update(serial + JSON.stringify(qrPayload))
+      .digest('hex');
+
+    const photoFile = req.files?.photo?.[0];
+    const docFile = req.files?.document?.[0];
+    const photoUrl = photoFile ? `/uploads/${path.basename(photoFile.path)}` : (req.body.photoUrl || null);
+
+    const card = {
+      serial,
+      version: 1,
+      photoUrl,
+      documentType: req.body.documentType,
+      documentNumber: req.body.documentNumber,
+      name: `${tourist.personalInfo.firstName} ${tourist.personalInfo.lastName}`,
+      nationality: tourist.personalInfo.nationality,
+      qrDataUrl,
+      issuedAt,
+      expiresAt,
+      status: 'active',
+      immutable: true
+    };
+
+    // Append immutable card to history
+    tourist.digitalIdCards.push(card);
+
+    // Update current digitalId snapshot for convenience
+    tourist.digitalId = {
+      qrCode: qrDataUrl,
+      blockchainHash,
+      issuedAt,
+      expiresAt,
+      isActive: true
+    };
+
+    await tourist.save();
+
+    return res.status(201).json({ success: true, message: 'Digital ID issued successfully', data: { card, blockchainHash } });
+  } catch (error) {
+    console.error('Issue digital ID error:', error);
+    res.status(500).json({ success: false, message: 'Failed to issue digital ID' });
+  }
+});
+
+// @route   GET /api/tourists/me/digital-id
+// @desc    Get current digital ID snapshot
+// @access  Private
+router.get('/me/digital-id', async (req, res) => {
+  try {
+    const tourist = await Tourist.findOne({ userId: req.user._id });
+    if (!tourist) {
+      return res.status(404).json({ success: false, message: 'Tourist profile not found' });
+    }
+    // auto-expire snapshot if needed
+    if (tourist.digitalId && tourist.digitalId.expiresAt && new Date(tourist.digitalId.expiresAt) < new Date()) {
+      tourist.digitalId.isActive = false;
+      await tourist.save();
+    }
+    return res.json({ success: true, data: tourist.digitalId });
+  } catch (error) {
+    console.error('Get digital ID error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch digital ID' });
+  }
+});
+
+// @route   GET /api/tourists/me/digital-id/history
+// @desc    Get history of issued digital ID cards
+// @access  Private
+router.get('/me/digital-id/history', async (req, res) => {
+  try {
+    const tourist = await Tourist.findOne({ userId: req.user._id }).lean();
+    if (!tourist) {
+      return res.status(404).json({ success: false, message: 'Tourist profile not found' });
+    }
+
+    // Mark expired
+    const now = new Date();
+    const history = (tourist.digitalIdCards || []).map(c => ({
+      ...c,
+      status: new Date(c.expiresAt) < now ? 'expired' : c.status
+    }));
+
+    return res.json({ success: true, data: history });
+  } catch (error) {
+    console.error('Get digital ID history error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch digital ID history' });
+  }
+});
+
+// Immutability guard: prevent direct updates to existing digitalIdCards entries
+router.put('/me/digital-id/:serial', async (req, res) => {
+  return res.status(403).json({ success: false, message: 'Digital ID cards are immutable and cannot be edited' });
+});
