@@ -79,6 +79,7 @@ router.post('/register', [
       }
     });
 
+<<<<<<< HEAD
     // Try creating a tourist profile if role is tourist, but don't block registration on validation failure
     if (role === 'tourist') {
       try {
@@ -99,6 +100,28 @@ router.post('/register', [
       } catch (touristErr) {
         console.warn('Tourist profile not created during registration (will prompt later):', touristErr.message);
       }
+=======
+    await user.save();
+
+    // Create tourist profile if role is tourist
+    if (role === 'tourist') {
+      const tourist = new Tourist({
+        userId: user._id,
+        personalInfo: {
+          firstName: name.split(' ')[0],
+          lastName: name.split(' ').slice(1).join(' ') || '',
+          nationality: nationality || 'Unknown',
+          phoneNumber: phone || ''
+        },
+        travelInfo: {
+          arrivalDate: new Date(),
+          departureDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+          purposeOfVisit: 'tourism'
+        }
+      });
+
+      await tourist.save();
+>>>>>>> cce787370a13878a3a10ef8f2239e60890db898f
     }
 
     // Generate tokens

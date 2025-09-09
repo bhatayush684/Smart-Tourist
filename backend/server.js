@@ -215,12 +215,18 @@ const gracefulShutdown = () => {
   server.close(() => {
     console.log('✅ HTTP server closed');
     
+<<<<<<< HEAD
     sequelize.close().then(() => {
       console.log('✅ PostgreSQL connection closed');
       process.exit(0);
     }).catch((err) => {
       console.error('❌ Error closing PostgreSQL connection:', err);
       process.exit(1);
+=======
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed');
+      process.exit(0);
+>>>>>>> cce787370a13878a3a10ef8f2239e60890db898f
     });
   });
   
