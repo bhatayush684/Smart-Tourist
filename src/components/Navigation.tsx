@@ -8,16 +8,21 @@ import { Badge } from '@/components/ui/badge';
 import { 
   Shield, 
   Smartphone, 
-  Monitor, 
-  Wifi, 
-  IdCard, 
-  Menu, 
+  Monitor,
+  Wifi,
+  IdCard,
+  Menu,
   X,
-  Globe,
-  Settings,
-  LogOut,
   User,
+  LogOut,
+  Settings,
   Bell,
+  ChevronDown,
+  Globe,
+  Zap,
+  UserCheck,
+  ShieldCheck,
+  ScanLine,
   WifiOff
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,11 +35,14 @@ const Navigation = () => {
   const { isConnected } = useWebSocket();
 
   const navItems = [
-    { path: '/', label: 'Dashboard', icon: Monitor, roles: ['tourist', 'admin', 'government'] },
-    { path: '/tourist-id', label: 'Digital ID', icon: IdCard, roles: ['tourist', 'admin', 'government'] },
-    { path: '/tourist-app', label: 'Tourist App', icon: Smartphone, roles: ['tourist', 'admin', 'government'] },
-    { path: '/admin', label: 'Admin Panel', icon: Shield, roles: ['admin', 'government'] },
-    { path: '/iot-monitor', label: 'IoT Monitor', icon: Wifi, roles: ['admin', 'government'] },
+    { path: '/', label: 'Dashboard', icon: Monitor, roles: ['tourist', 'admin', 'police', 'id_issuer'] },
+    { path: '/tourist-id', label: 'Digital ID', icon: IdCard, roles: ['tourist', 'admin'] },
+    { path: '/tourist-app', label: 'Tourist App', icon: Smartphone, roles: ['tourist', 'admin'] },
+    { path: '/admin', label: 'Admin Panel', icon: Shield, roles: ['admin'] },
+    { path: '/admin/approvals', label: 'User Approvals', icon: UserCheck, roles: ['admin'] },
+    { path: '/iot-monitor', label: 'IoT Monitor', icon: Wifi, roles: ['admin', 'police'] },
+    { path: '/police-dashboard', label: 'Police Center', icon: ShieldCheck, roles: ['police'] },
+    { path: '/id-verification', label: 'ID Verification', icon: ScanLine, roles: ['id_issuer'] },
   ];
 
   const filteredNavItems = navItems.filter(item => 
@@ -152,43 +160,123 @@ const Navigation = () => {
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="text-primary-foreground/95 hover:bg-primary-light/25">
-                  <Avatar className="w-8 h-8">
-                    <AvatarImage src={user?.avatar} />
-                    <AvatarFallback>
-                      {user?.name?.charAt(0).toUpperCase() || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
+                <Button variant="ghost" className="text-primary-foreground/95 hover:bg-primary-light/25 p-2">
+                  <div className="flex items-center space-x-2">
+                    <Avatar className="w-8 h-8 ring-2 ring-primary-foreground/20">
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="hidden lg:block text-left">
+                      <p className="text-sm font-medium text-primary-foreground truncate max-w-24">
+                        {user?.name}
+                      </p>
+                      <p className="text-xs text-primary-foreground/70 capitalize">
+                        {user?.role?.replace('_', ' ')}
+                      </p>
+                    </div>
+                  </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="flex items-center justify-start gap-2 p-2">
-                  <div className="flex flex-col space-y-1 leading-none">
-                    <p className="font-medium">{user?.name}</p>
-                    <p className="text-xs text-muted-foreground">{user?.email}</p>
-                    <Badge variant="outline" className="w-fit text-xs">
-                      {user?.role}
-                    </Badge>
+              <DropdownMenuContent align="end" className="w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-700/50">
+                <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+                  <div className="flex items-center space-x-3">
+                    <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
+                      <AvatarImage src={user?.avatar} />
+                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-lg">
+                        {user?.name?.charAt(0).toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                        {user?.name}
+                      </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                        {user?.email}
+                      </p>
+                      <div className="flex items-center space-x-2 mt-1">
+                        <Badge 
+                          variant="outline" 
+                          className={`text-xs font-medium ${
+                            user?.role === 'admin' ? 'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300' :
+                            user?.role === 'police' ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300' :
+                            user?.role === 'id_issuer' ? 'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-900/20 dark:text-purple-300' :
+                            'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300'
+                          }`}
+                        >
+                          {user?.role?.replace('_', ' ').toUpperCase()}
+                        </Badge>
+                        {user?.status && (
+                          <Badge 
+                            variant="outline"
+                            className={`text-xs ${
+                              user.status === 'active' ? 'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300' :
+                              user.status === 'pending' ? 'border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300' :
+                              'border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300'
+                            }`}
+                          >
+                            {user.status}
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Bell className="mr-2 h-4 w-4" />
-                  <span>Notifications</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
+                
+                <div className="py-2">
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                    <User className="mr-3 h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium text-sm">Profile Settings</p>
+                      <p className="text-xs text-gray-500">Manage your account</p>
+                    </div>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                    <Settings className="mr-3 h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium text-sm">Preferences</p>
+                      <p className="text-xs text-gray-500">Customize your experience</p>
+                    </div>
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                    <Bell className="mr-3 h-4 w-4 text-gray-500" />
+                    <div className="flex items-center justify-between flex-1">
+                      <div>
+                        <p className="font-medium text-sm">Notifications</p>
+                        <p className="text-xs text-gray-500">Manage alerts</p>
+                      </div>
+                      <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">3</Badge>
+                    </div>
+                  </DropdownMenuItem>
+
+                  {user?.role === 'admin' && (
+                    <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                      <Shield className="mr-3 h-4 w-4 text-gray-500" />
+                      <div>
+                        <p className="font-medium text-sm">Admin Panel</p>
+                        <p className="text-xs text-gray-500">System management</p>
+                      </div>
+                    </DropdownMenuItem>
+                  )}
+                </div>
+                
+                <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800" />
+                
+                <div className="py-2">
+                  <DropdownMenuItem 
+                    onClick={logout}
+                    className="px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer text-red-600 dark:text-red-400"
+                  >
+                    <LogOut className="mr-3 h-4 w-4" />
+                    <div>
+                      <p className="font-medium text-sm">Sign Out</p>
+                      <p className="text-xs opacity-75">End your session</p>
+                    </div>
+                  </DropdownMenuItem>
+                </div>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

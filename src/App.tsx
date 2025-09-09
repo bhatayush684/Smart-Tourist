@@ -7,15 +7,18 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { WebSocketProvider } from "./contexts/WebSocketContext";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Layout from "./components/Layout";
-import Dashboard from "./pages/Dashboard";
-import TouristId from "./pages/TouristId";
-import TouristApp from "./pages/TouristApp";
-import AdminDashboard from "./pages/AdminDashboard";
-import IoTMonitor from "./pages/IoTMonitor";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import Dashboard from './pages/Dashboard';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import TouristId from './pages/TouristId';
+import TouristApp from './pages/TouristApp';
+import AdminDashboard from './pages/AdminDashboard';
+import IoTMonitor from './pages/IoTMonitor';
+import PoliceDashboard from './pages/PoliceDashboard';
+import IdVerification from './pages/IdVerification';
+import AdminApproval from './pages/AdminApproval';
+import NotFound from './pages/NotFound';
 import ProtectedRoute from "./components/ProtectedRoute";
-import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,9 +70,30 @@ const App = () => (
                   </ProtectedRoute>
                 } />
                 <Route path="/iot-monitor" element={
-                  <ProtectedRoute requiredRole="admin">
+                  <ProtectedRoute requiredRoles={["admin", "police"]}>
                     <Layout>
                       <IoTMonitor />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/police-dashboard" element={
+                  <ProtectedRoute requiredRole="police">
+                    <Layout>
+                      <PoliceDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/id-verification" element={
+                  <ProtectedRoute requiredRole="id_issuer">
+                    <Layout>
+                      <IdVerification />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/approvals" element={
+                  <ProtectedRoute requiredRole="admin">
+                    <Layout>
+                      <AdminApproval />
                     </Layout>
                   </ProtectedRoute>
                 } />

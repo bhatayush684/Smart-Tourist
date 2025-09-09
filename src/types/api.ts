@@ -3,12 +3,17 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'tourist' | 'admin' | 'government';
+  role: 'tourist' | 'admin' | 'police' | 'id_issuer';
+  status?: 'active' | 'pending' | 'suspended';
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   nationality?: string;
   phone?: string;
+  department?: string;
+  badgeNumber?: string;
+  location?: string;
+  idType?: string;
 }
 
 export interface AuthResponse {

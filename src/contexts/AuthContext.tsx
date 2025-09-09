@@ -6,9 +6,14 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'tourist' | 'admin' | 'government';
+  role: 'tourist' | 'admin' | 'police' | 'id_issuer';
   touristId?: string;
   avatar?: string;
+  status?: 'active' | 'pending' | 'suspended';
+  department?: string;
+  badgeNumber?: string;
+  location?: string;
+  idType?: string;
 }
 
 interface AuthContextType {
@@ -24,9 +29,13 @@ interface RegisterData {
   name: string;
   email: string;
   password: string;
-  role: 'tourist' | 'admin' | 'government';
+  role: 'tourist' | 'admin' | 'police' | 'id_issuer';
   nationality?: string;
   phone?: string;
+  department?: string;
+  badgeNumber?: string;
+  location?: string;
+  idType?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

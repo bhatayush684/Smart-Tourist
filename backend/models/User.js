@@ -24,9 +24,50 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['tourist', 'admin', 'government'],
+    enum: ['tourist', 'admin', 'police', 'id_issuer'],
     default: 'tourist',
     required: true
+  },
+  status: {
+    type: String,
+    enum: ['active', 'pending', 'suspended'],
+    default: function() {
+      return ['police', 'id_issuer'].includes(this.role) ? 'pending' : 'active';
+    }
+  },
+  // Additional fields for police officers
+  department: {
+    type: String,
+    required: function() { return this.role === 'police'; }
+  },
+  badgeNumber: {
+    type: String,
+    required: function() { return this.role === 'police'; },
+    unique: true,
+    sparse: true
+  },
+  location: {
+    type: String,
+    required: function() { return ['police', 'id_issuer'].includes(this.role); }
+  },
+  // Additional fields for ID issuers
+  idType: {
+    type: String,
+    required: function() { return this.role === 'id_issuer'; }
+  },
+  // Approval workflow fields
+  approvedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null
+  },
+  approvedAt: {
+    type: Date,
+    default: null
+  },
+  rejectionReason: {
+    type: String,
+    default: null
   },
   avatar: {
     type: String,

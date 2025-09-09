@@ -204,6 +204,7 @@ const connectDB = async () => {
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
     console.log('⚠️  Starting server without database connection...');
+    console.log('💡 To fix this, install MongoDB or use MongoDB Atlas');
     // Don't exit, just continue without database
   }
 };
@@ -269,14 +270,16 @@ process.on('SIGINT', gracefulShutdown);
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectDB();
-  
+  // Start server first, then try to connect to DB
   server.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📊 Environment: ${process.env.NODE_ENV}`);
     console.log(`🌐 WebSocket server ready`);
     console.log(`📡 Health check: http://localhost:${PORT}/health`);
   });
+  
+  // Connect to database after server starts
+  await connectDB();
 };
 
 // Handle unhandled promise rejections

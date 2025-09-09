@@ -42,7 +42,7 @@ router.post('/register', [
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long'),
   body('role')
-    .isIn(['tourist', 'admin', 'government'])
+    .isIn(['tourist', 'admin', 'police', 'id_issuer'])
     .withMessage('Invalid role')
 ], async (req, res) => {
   try {
@@ -56,7 +56,7 @@ router.post('/register', [
       });
     }
 
-    const { name, email, password, role, nationality, phone } = req.body;
+    const { name, email, password, role, nationality, phone, department, badgeNumber, location, idType } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findByEmail(email);
@@ -67,8 +67,19 @@ router.post('/register', [
       });
     }
 
+    // Check for unique badge number if police
+    if (role === 'police' && badgeNumber) {
+      const existingBadge = await User.findOne({ badgeNumber });
+      if (existingBadge) {
+        return res.status(400).json({
+          success: false,
+          message: 'Badge number already exists'
+        });
+      }
+    }
+
     // Create user
-    const user = new User({
+    const userData = {
       name,
       email,
       password,
@@ -77,7 +88,19 @@ router.post('/register', [
         ipAddress: req.ip,
         userAgent: req.get('User-Agent')
       }
-    });
+    };
+
+    // Add role-specific fields
+    if (role === 'police') {
+      userData.department = department;
+      userData.badgeNumber = badgeNumber;
+      userData.location = location;
+    } else if (role === 'id_issuer') {
+      userData.location = location;
+      userData.idType = idType;
+    }
+
+    const user = new User(userData);
 
     await user.save();
 
@@ -177,6 +200,24 @@ router.post('/login', [
       return res.status(401).json({
         success: false,
         message: 'Account is deactivated'
+      });
+    }
+
+    // Check if user account is pending approval
+    if (user.status === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Account is pending approval. Please wait for admin approval.',
+        status: 'pending'
+      });
+    }
+
+    // Check if user account is suspended
+    if (user.status === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Account has been suspended. Please contact support.',
+        status: 'suspended'
       });
     }
 

@@ -508,6 +508,266 @@ router.get('/system/health', requireAdmin, async (req, res) => {
   }
 });
 
+// @route   GET /api/admin/users/pending
+// @desc    Get pending user approvals
+// @access  Private (Admin only)
+router.get('/users/pending', requireAdmin, async (req, res) => {
+  try {
+    const { page = 1, limit = 10, role } = req.query;
+    const query = { status: 'pending', isActive: true };
+
+    if (role) query.role = role;
+
+    const pendingUsers = await User.find(query)
+      .select('-password')
+      .sort({ createdAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await User.countDocuments(query);
+
+    res.json({
+      success: true,
+      data: pendingUsers,
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / limit),
+        total
+      }
+    });
+  } catch (error) {
+    console.error('Get pending users error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch pending users'
+    });
+  }
+});
+
+// @route   PUT /api/admin/users/:id/approve
+// @desc    Approve a pending user
+// @access  Private (Admin only)
+router.put('/users/:id/approve', requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not pending approval'
+      });
+    }
+
+    user.status = 'active';
+    user.approvedBy = req.user._id;
+    user.approvedAt = new Date();
+    user.rejectionReason = null;
+    await user.save();
+
+    // Emit notification via WebSocket
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${user._id}`).emit('accountApproved', {
+        message: 'Your account has been approved and is now active',
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User approved successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Approve user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to approve user'
+    });
+  }
+});
+
+// @route   PUT /api/admin/users/:id/reject
+// @desc    Reject a pending user
+// @access  Private (Admin only)
+router.put('/users/:id/reject', requireAdmin, [
+  body('reason')
+    .notEmpty()
+    .trim()
+    .withMessage('Rejection reason is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { reason } = req.body;
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.status !== 'pending') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not pending approval'
+      });
+    }
+
+    user.status = 'suspended';
+    user.rejectionReason = reason;
+    user.approvedBy = req.user._id;
+    user.approvedAt = new Date();
+    await user.save();
+
+    // Emit notification via WebSocket
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${user._id}`).emit('accountRejected', {
+        message: `Your account has been rejected: ${reason}`,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User rejected successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Reject user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reject user'
+    });
+  }
+});
+
+// @route   PUT /api/admin/users/:id/suspend
+// @desc    Suspend an active user
+// @access  Private (Admin only)
+router.put('/users/:id/suspend', requireAdmin, [
+  body('reason')
+    .notEmpty()
+    .trim()
+    .withMessage('Suspension reason is required')
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { reason } = req.body;
+    const user = await User.findById(req.params.id);
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Cannot suspend admin users'
+      });
+    }
+
+    user.status = 'suspended';
+    user.rejectionReason = reason;
+    await user.save();
+
+    // Emit notification via WebSocket
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${user._id}`).emit('accountSuspended', {
+        message: `Your account has been suspended: ${reason}`,
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User suspended successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Suspend user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to suspend user'
+    });
+  }
+});
+
+// @route   PUT /api/admin/users/:id/reactivate
+// @desc    Reactivate a suspended user
+// @access  Private (Admin only)
+router.put('/users/:id/reactivate', requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.status !== 'suspended') {
+      return res.status(400).json({
+        success: false,
+        message: 'User is not suspended'
+      });
+    }
+
+    user.status = 'active';
+    user.rejectionReason = null;
+    await user.save();
+
+    // Emit notification via WebSocket
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`user_${user._id}`).emit('accountReactivated', {
+        message: 'Your account has been reactivated',
+        timestamp: new Date()
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'User reactivated successfully',
+      data: user
+    });
+  } catch (error) {
+    console.error('Reactivate user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to reactivate user'
+    });
+  }
+});
+
 // Helper function to check database health
 const checkDatabaseHealth = async () => {
   try {
