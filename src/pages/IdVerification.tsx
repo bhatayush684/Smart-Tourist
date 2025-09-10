@@ -152,13 +152,13 @@ const IdVerification: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 dark:from-gray-900 dark:to-green-900 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <IdCard className="w-6 h-6 text-white" />
               </div>
               ID Verification Center
@@ -168,14 +168,14 @@ const IdVerification: React.FC = () => {
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <Badge className="bg-green-100 text-green-800 border-green-200">
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
               <Shield className="w-3 h-3 mr-1" />
               Authorized
             </Badge>
             <Button 
               onClick={handleScan}
               disabled={scanMode}
-              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700"
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
             >
               <Scan className="w-4 h-4 mr-2" />
               {scanMode ? 'Scanning...' : 'Quick Scan'}
@@ -185,50 +185,58 @@ const IdVerification: React.FC = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-yellow-500 to-orange-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-100 text-sm font-medium">Pending Verification</p>
-                  <p className="text-3xl font-bold">{pendingRequests.filter(r => r.status === 'pending').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Pending Verification</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {pendingRequests.filter(r => r.status === 'pending').length}
+                  </p>
                 </div>
-                <Clock className="w-8 h-8 text-yellow-200" />
+                <Clock className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-teal-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm font-medium">Verified Today</p>
-                  <p className="text-3xl font-bold">{pendingRequests.filter(r => r.status === 'verified').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Verified Today</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {pendingRequests.filter(r => r.status === 'verified').length}
+                  </p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-200" />
+                <CheckCircle className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-red-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm font-medium">Flagged Cases</p>
-                  <p className="text-3xl font-bold">{pendingRequests.filter(r => r.status === 'flagged').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Flagged Cases</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {pendingRequests.filter(r => r.status === 'flagged').length}
+                  </p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-orange-200" />
+                <AlertTriangle className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-red-500 to-pink-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-100 text-sm font-medium">Rejected</p>
-                  <p className="text-3xl font-bold">{pendingRequests.filter(r => r.status === 'rejected').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Rejected</p>
+                  <p className="text-3xl font-bold text-blue-600">
+                    {pendingRequests.filter(r => r.status === 'rejected').length}
+                  </p>
                 </div>
-                <XCircle className="w-8 h-8 text-red-200" />
+                <XCircle className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -236,7 +244,7 @@ const IdVerification: React.FC = () => {
 
         {/* Quick Scan Result */}
         {scannedData && (
-          <Card className="border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+          <Card className="border border-gray-200 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
             <CardContent className="p-6">
               <div className="flex items-center gap-3 mb-3">
                 <CheckCircle className="w-6 h-6 text-green-500" />
@@ -244,7 +252,7 @@ const IdVerification: React.FC = () => {
               </div>
               <p className="text-muted-foreground mb-4">{scannedData}</p>
               <div className="flex gap-2">
-                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   Verify & Approve
                 </Button>
@@ -269,10 +277,10 @@ const IdVerification: React.FC = () => {
           </TabsList>
 
           <TabsContent value="pending" className="space-y-4">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-yellow-500" />
+                  <FileText className="w-5 h-5 text-blue-500" />
                   Pending Verification Requests
                 </CardTitle>
                 <CardDescription>
@@ -281,7 +289,7 @@ const IdVerification: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {pendingRequests.map((request) => (
-                  <div key={request.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <div key={request.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -320,7 +328,7 @@ const IdVerification: React.FC = () => {
                         <Button
                           size="sm"
                           onClick={() => handleVerification(request.id, 'verify')}
-                          className="bg-green-600 hover:bg-green-700"
+                          className="bg-blue-600 hover:bg-blue-700"
                         >
                           <CheckCircle className="w-4 h-4 mr-1" />
                           Verify

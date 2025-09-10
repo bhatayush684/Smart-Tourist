@@ -179,8 +179,8 @@ const Navigation = () => {
                   </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-gray-200/50 dark:border-gray-700/50">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-800">
+              <DropdownMenuContent align="end" className="w-72 bg-white border border-gray-200 shadow-lg rounded-xl overflow-hidden">
+                <div className="p-4 border-b border-gray-200">
                   <div className="flex items-center space-x-3">
                     <Avatar className="w-12 h-12 ring-2 ring-blue-500/20">
                       <AvatarImage src={user?.avatar} />
@@ -189,10 +189,10 @@ const Navigation = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 dark:text-gray-100 truncate">
+                      <p className="font-semibold text-gray-900 truncate">
                         {user?.name}
                       </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                      <p className="text-sm text-gray-600 truncate">
                         {user?.email}
                       </p>
                       <div className="flex items-center space-x-2 mt-1">
@@ -225,27 +225,27 @@ const Navigation = () => {
                 </div>
                 
                 <div className="py-2">
-                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                     <User className="mr-3 h-4 w-4 text-gray-500" />
                     <div>
-                      <p className="font-medium text-sm">Profile Settings</p>
+                      <p className="font-medium text-sm text-gray-900">Profile Settings</p>
                       <p className="text-xs text-gray-500">Manage your account</p>
                     </div>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                     <Settings className="mr-3 h-4 w-4 text-gray-500" />
                     <div>
-                      <p className="font-medium text-sm">Preferences</p>
+                      <p className="font-medium text-sm text-gray-900">Preferences</p>
                       <p className="text-xs text-gray-500">Customize your experience</p>
                     </div>
                   </DropdownMenuItem>
                   
-                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                  <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                     <Bell className="mr-3 h-4 w-4 text-gray-500" />
                     <div className="flex items-center justify-between flex-1">
                       <div>
-                        <p className="font-medium text-sm">Notifications</p>
+                        <p className="font-medium text-sm text-gray-900">Notifications</p>
                         <p className="text-xs text-gray-500">Manage alerts</p>
                       </div>
                       <Badge variant="secondary" className="bg-blue-100 text-blue-700 text-xs">3</Badge>
@@ -253,27 +253,27 @@ const Navigation = () => {
                   </DropdownMenuItem>
 
                   {user?.role === 'admin' && (
-                    <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                    <DropdownMenuItem className="px-4 py-3 hover:bg-gray-50 cursor-pointer">
                       <Shield className="mr-3 h-4 w-4 text-gray-500" />
                       <div>
-                        <p className="font-medium text-sm">Admin Panel</p>
+                        <p className="font-medium text-sm text-gray-900">Admin Panel</p>
                         <p className="text-xs text-gray-500">System management</p>
                       </div>
                     </DropdownMenuItem>
                   )}
                 </div>
                 
-                <DropdownMenuSeparator className="bg-gray-100 dark:bg-gray-800" />
+                <DropdownMenuSeparator className="bg-gray-200" />
                 
                 <div className="py-2">
                   <DropdownMenuItem 
                     onClick={logout}
-                    className="px-4 py-3 hover:bg-red-50 dark:hover:bg-red-900/20 cursor-pointer text-red-600 dark:text-red-400"
+                    className="px-4 py-3 hover:bg-red-50 cursor-pointer text-red-600"
                   >
                     <LogOut className="mr-3 h-4 w-4" />
                     <div>
                       <p className="font-medium text-sm">Sign Out</p>
-                      <p className="text-xs opacity-75">End your session</p>
+                      <p className="text-xs text-red-500/70">End your session</p>
                     </div>
                   </DropdownMenuItem>
                 </div>

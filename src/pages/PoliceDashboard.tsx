@@ -151,7 +151,7 @@ const PoliceDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-900 p-6">
+    <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -180,50 +180,50 @@ const PoliceDashboard: React.FC = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-red-500 to-pink-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-100 text-sm font-medium">Active Alerts</p>
-                  <p className="text-3xl font-bold">{activeAlerts.filter(a => a.status === 'active').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Active Alerts</p>
+                  <p className="text-3xl font-bold text-blue-600">{activeAlerts.filter(a => a.status === 'active').length}</p>
                 </div>
-                <AlertTriangle className="w-8 h-8 text-red-200" />
+                <AlertTriangle className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-red-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-orange-100 text-sm font-medium">Under Investigation</p>
-                  <p className="text-3xl font-bold">{activeAlerts.filter(a => a.status === 'investigating').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Under Investigation</p>
+                  <p className="text-3xl font-bold text-blue-600">{activeAlerts.filter(a => a.status === 'investigating').length}</p>
                 </div>
-                <Eye className="w-8 h-8 text-orange-200" />
+                <Eye className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-100 text-sm font-medium">Tourists Monitored</p>
-                  <p className="text-3xl font-bold">{tourists.length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Tourists Monitored</p>
+                  <p className="text-3xl font-bold text-blue-600">{tourists.length}</p>
                 </div>
-                <Users className="w-8 h-8 text-blue-200" />
+                <Users className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-green-500 to-teal-600 text-white">
+          <Card className="border border-gray-200 bg-white shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-100 text-sm font-medium">Resolved Today</p>
-                  <p className="text-3xl font-bold">{activeAlerts.filter(a => a.status === 'resolved').length}</p>
+                  <p className="text-muted-foreground text-sm font-medium">Resolved Today</p>
+                  <p className="text-3xl font-bold text-blue-600">{activeAlerts.filter(a => a.status === 'resolved').length}</p>
                 </div>
-                <CheckCircle className="w-8 h-8 text-green-200" />
+                <CheckCircle className="w-8 h-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
@@ -238,7 +238,7 @@ const PoliceDashboard: React.FC = () => {
           </TabsList>
 
           <TabsContent value="alerts" className="space-y-4">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -250,7 +250,7 @@ const PoliceDashboard: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {activeAlerts.map((alert) => (
-                  <div key={alert.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                  <div key={alert.id} className="border rounded-lg p-4 space-y-3 hover:bg-gray-50 transition-colors">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
@@ -309,7 +309,7 @@ const PoliceDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="tourists" className="space-y-4">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5 text-blue-500" />
@@ -331,7 +331,7 @@ const PoliceDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {filteredTourists.map((tourist) => (
-                    <div key={tourist.id} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div key={tourist.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
                       <div className="flex items-center justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
@@ -372,7 +372,7 @@ const PoliceDashboard: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="patrol" className="space-y-4">
-            <Card className="border-0 shadow-lg">
+            <Card className="border border-gray-200 bg-white shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Car className="w-5 h-5 text-green-500" />
