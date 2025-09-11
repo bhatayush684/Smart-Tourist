@@ -11,6 +11,7 @@ require('dotenv').config();
 
 // Import routes
 const authRoutes = require('./routes/auth');
+const simpleAuthRoutes = require('./routes/simple-auth');
 const touristRoutes = require('./routes/tourists');
 const deviceRoutes = require('./routes/devices');
 const alertRoutes = require('./routes/alerts');
@@ -105,6 +106,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/simple-auth', simpleAuthRoutes);
 app.use('/api/tourists', authenticateToken, touristRoutes);
 app.use('/api/devices', authenticateToken, deviceRoutes);
 app.use('/api/alerts', authenticateToken, alertRoutes);

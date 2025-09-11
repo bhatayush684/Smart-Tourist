@@ -67,7 +67,7 @@ class ApiService {
 
   // Auth methods
   async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await this.request<AuthResponse>('/api/auth/login', {
+    const response = await this.request<AuthResponse>('/api/simple-auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     });
@@ -107,7 +107,7 @@ class ApiService {
   }
 
   async verifyToken(): Promise<TokenVerificationResponse> {
-    return this.request<TokenVerificationResponse>('/api/auth/verify');
+    return this.request<TokenVerificationResponse>('/api/simple-auth/verify');
   }
 
   async refreshToken(): Promise<AuthResponse> {
